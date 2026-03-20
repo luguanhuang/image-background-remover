@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Image Background Remover
 
-## Getting Started
+A lightweight MVP for the keyword **image background remover**, built with **Next.js + Tailwind CSS** and designed for **Cloudflare deployment**.
 
-First, run the development server:
+## What this MVP does
+
+- Upload a single JPG, PNG, or WebP image
+- Remove the background with the **remove.bg API**
+- Preview the original image and transparent PNG result
+- Download the processed PNG
+- Explain privacy handling clearly
+
+## Product constraints
+
+- No login
+- No database
+- No object storage
+- No batch processing
+- Images are **not persistently stored by this app**
+- Images are sent to **remove.bg** for background removal
+
+## Tech stack
+
+- Next.js App Router
+- Tailwind CSS
+- remove.bg API
+- Cloudflare-ready setup via OpenNext
+
+## Environment variables
+
+Create a local `.env.local` file:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+REMOVE_BG_API_KEY=your_remove_bg_api_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without `REMOVE_BG_API_KEY`, the homepage still loads, but background removal requests will fail.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open `http://localhost:3000`
 
-To learn more about Next.js, take a look at the following resources:
+## Production build
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Cloudflare preview
 
-## Deploy on Vercel
+```bash
+npm run cf:build
+npm run cf:preview
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Cloudflare deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run cf:deploy
+```
+
+Before deploying, make sure you have:
+
+- Wrangler authenticated
+- A valid Cloudflare account / worker name
+- `REMOVE_BG_API_KEY` configured as a Cloudflare secret
+
+Example:
+
+```bash
+wrangler secret put REMOVE_BG_API_KEY
+```
+
+## Privacy notes
+
+This app does **not** persistently store uploaded or processed images. Files are handled in memory during the active request and sent to remove.bg for processing. Response headers are returned with `Cache-Control: no-store`.
