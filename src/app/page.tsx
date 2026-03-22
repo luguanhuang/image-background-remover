@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { auth } from "@/auth";
+import { AuthButtons } from "@/components/auth-buttons";
 import { BackgroundRemoverTool } from "@/components/background-remover-tool";
 
 const features = [
@@ -14,13 +16,17 @@ const features = [
       "处理完成后可直接预览并下载透明背景 PNG，方便继续做设计、排版和二次创作。",
   },
   {
-    title: "轻量快速",
+    title: "Google 登录保护",
     description:
-      "当前版本聚焦最核心的单图处理体验，不做复杂账号系统，打开页面就能开始使用。",
+      "现在接入了 Google OAuth，用户先登录再使用，方便做额度控制和后续会员体系。",
   },
 ];
 
 const steps = [
+  {
+    title: "Google 登录",
+    description: "先完成 Google 登录，再进入上传和抠图流程。",
+  },
   {
     title: "上传图片",
     description: "支持 JPG、PNG、WebP，单张图片大小最高 10MB。",
@@ -48,6 +54,11 @@ const faqs = [
     answer: "目前支持 JPG、JPEG、PNG、WebP，单张图片大小不超过 10MB。",
   },
   {
+    question: "现在需要登录吗？",
+    answer:
+      "是的。当前版本已经接入 Google 登录，登录后才能上传图片并调用抠图能力。",
+  },
+  {
     question: "会保存我上传的图片吗？",
     answer:
       "当前 MVP 不会长期保存上传图和处理结果，图片仅在请求处理过程中使用。",
@@ -64,7 +75,10 @@ const faqs = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+  const isAuthenticated = Boolean(session?.user);
+
   return (
     <main className="bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_28%),linear-gradient(180deg,#f8fbff_0%,#ffffff_46%,#f8fafc_100%)] text-slate-900">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-6 pb-20 pt-8 md:px-8 lg:px-10">
@@ -74,41 +88,48 @@ export default function Home() {
               PixelCut Lite
             </p>
             <p className="mt-2 text-sm text-slate-600">
-              更像正式产品页的在线抠图工具，打开就能上传，处理后直接下载透明 PNG。
+              更像正式产品页的在线抠图工具，先登录再上传，处理后直接下载透明 PNG。
             </p>
           </div>
-          <nav className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-            <a href="#tool" className="transition hover:text-slate-950">
-              开始抠图
-            </a>
-            <a href="#how-it-works" className="transition hover:text-slate-950">
-              使用流程
-            </a>
-            <a href="#faq" className="transition hover:text-slate-950">
-              常见问题
-            </a>
-            <Link href="/privacy" className="transition hover:text-slate-950">
-              隐私说明
-            </Link>
-            <Link
-              href="/faq"
-              className="inline-flex items-center rounded-full border border-slate-300 px-4 py-2 font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
-            >
-              帮助中心
-            </Link>
-          </nav>
+          <div className="flex flex-col items-start gap-3 md:items-end">
+            <nav className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+              <a href="#tool" className="transition hover:text-slate-950">
+                开始抠图
+              </a>
+              <a href="#how-it-works" className="transition hover:text-slate-950">
+                使用流程
+              </a>
+              <a href="#faq" className="transition hover:text-slate-950">
+                常见问题
+              </a>
+              <Link href="/privacy" className="transition hover:text-slate-950">
+                隐私说明
+              </Link>
+              <Link
+                href="/faq"
+                className="inline-flex items-center rounded-full border border-slate-300 px-4 py-2 font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
+              >
+                帮助中心
+              </Link>
+            </nav>
+            <AuthButtons
+              isAuthenticated={isAuthenticated}
+              userName={session?.user?.name}
+              userEmail={session?.user?.email}
+            />
+          </div>
         </header>
 
         <section className="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 shadow-sm">
-              在线智能去背景 · 实时预览 · 透明 PNG 下载
+              Google 登录保护 · 在线智能去背景 · 透明 PNG 下载
             </div>
             <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
               一键去除图片背景，让商品图和人物图更干净
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              上传一张图片，自动完成抠图，几秒内返回透明背景 PNG。
+              先使用 Google 账号登录，再上传一张图片，系统会自动完成抠图，几秒内返回透明背景 PNG。
               适合电商主图、头像、封面素材、海报元素和各类营销内容制作。
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -127,8 +148,8 @@ export default function Home() {
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-                <div className="text-sm font-semibold text-slate-950">支持格式</div>
-                <div className="mt-1 text-sm text-slate-600">JPG / PNG / WebP</div>
+                <div className="text-sm font-semibold text-slate-950">登录方式</div>
+                <div className="mt-1 text-sm text-slate-600">Google OAuth</div>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
                 <div className="text-sm font-semibold text-slate-950">最大大小</div>
@@ -187,18 +208,18 @@ export default function Home() {
                 <div className="mt-1">适合二次排版、商品图展示和海报设计。</div>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <div className="font-semibold text-slate-900">流程更直接</div>
-                <div className="mt-1">上传、处理、预览、下载，4 步完成。</div>
+                <div className="font-semibold text-slate-900">流程更可控</div>
+                <div className="mt-1">先登录、再上传、再处理，便于额度和用户管理。</div>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <div className="font-semibold text-slate-900">没有登录门槛</div>
-                <div className="mt-1">当前 MVP 不做复杂账号流程，体验更轻。</div>
+                <div className="font-semibold text-slate-900">可扩展会员体系</div>
+                <div className="mt-1">后续可继续接额度、积分、历史记录和订阅。</div>
               </div>
             </div>
           </div>
         </section>
 
-        <BackgroundRemoverTool />
+        <BackgroundRemoverTool isAuthenticated={isAuthenticated} />
 
         <section className="grid gap-4 md:grid-cols-3">
           {features.map((feature) => (
@@ -244,10 +265,10 @@ export default function Home() {
                 使用流程
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-                三步完成在线抠图
+                四步完成在线抠图
               </h2>
             </div>
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {steps.map((step, index) => (
                 <article
                   key={step.title}
@@ -276,7 +297,7 @@ export default function Home() {
               关于这个在线抠图工具，你可能想先了解这些
             </h2>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              如果你想进一步了解数据处理方式和能力边界，可以继续查看 FAQ 和隐私说明页。
+              如果你想进一步了解数据处理方式、登录方式和能力边界，可以继续查看 FAQ 和隐私说明页。
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
@@ -315,10 +336,10 @@ export default function Home() {
                 现在开始
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-                上传一张图片，马上试试实际抠图效果
+                登录 Google 后，马上试试实际抠图效果
               </h2>
               <p className="mt-4 text-sm leading-6 text-slate-600">
-                当前版本先把最关键的体验做完整：上传、去背景、预览、下载，不加多余步骤。
+                当前版本已经接入登录保护，把最关键的体验做完整：登录、上传、去背景、预览、下载。
               </p>
             </div>
             <a

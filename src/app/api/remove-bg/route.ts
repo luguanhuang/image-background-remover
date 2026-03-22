@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 export const runtime = "edge";
 
@@ -10,6 +11,12 @@ function jsonError(status: number, error: string, details?: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+
+  if (!session?.user) {
+    return jsonError(401, "Unauthorized.", "Please sign in with Google first.");
+  }
+
   const apiKey = process.env.REMOVE_BG_API_KEY;
 
   if (!apiKey) {

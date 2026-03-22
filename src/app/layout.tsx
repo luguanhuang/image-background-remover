@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { auth } from "@/auth";
+import { AppSessionProvider } from "@/components/session-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,37 +9,41 @@ export const metadata: Metadata = {
     template: "%s | Image Background Remover",
   },
   description:
-    "Remove background from images online in seconds. Upload a JPG, PNG, or WebP file, erase the background automatically, and download a transparent PNG.",
+    "Remove background from images online in seconds. Sign in with Google, upload a JPG, PNG, or WebP file, erase the background automatically, and download a transparent PNG.",
   keywords: [
     "image background remover",
     "remove background from image",
     "make image background transparent",
-    "free background remover",
+    "google login background remover",
     "transparent png maker",
   ],
   metadataBase: new URL("https://example.com"),
   openGraph: {
     title: "Image Background Remover",
     description:
-      "Upload an image, remove the background automatically, and download a transparent PNG.",
+      "Sign in with Google, upload an image, remove the background automatically, and download a transparent PNG.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Image Background Remover",
     description:
-      "Fast online background removal for JPG, PNG, and WebP images.",
+      "Google-authenticated online background removal for JPG, PNG, and WebP images.",
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AppSessionProvider session={session}>{children}</AppSessionProvider>
+      </body>
     </html>
   );
 }

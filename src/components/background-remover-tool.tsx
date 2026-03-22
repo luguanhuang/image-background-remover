@@ -12,6 +12,10 @@ type ToolError = {
   details?: string;
 };
 
+type BackgroundRemoverToolProps = {
+  isAuthenticated: boolean;
+};
+
 function formatFileSize(bytes: number) {
   if (bytes < 1024 * 1024) {
     return `${(bytes / 1024).toFixed(1)} KB`;
@@ -38,7 +42,9 @@ function validateImage(file: File): ToolError | null {
   return null;
 }
 
-export function BackgroundRemoverTool() {
+export function BackgroundRemoverTool({
+  isAuthenticated,
+}: BackgroundRemoverToolProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
@@ -55,6 +61,10 @@ export function BackgroundRemoverTool() {
   }, [originalUrl, resultUrl]);
 
   const statusLabel = useMemo(() => {
+    if (!isAuthenticated) {
+      return "请先使用 Google 登录，再开始上传图片并抠图。";
+    }
+
     switch (status) {
       case "processing":
         return "正在处理中，请稍等...";
@@ -67,7 +77,7 @@ export function BackgroundRemoverTool() {
           ? `已选择文件：${selectedFile.name}`
           : "上传一张图片后即可开始抠图。";
     }
-  }, [error?.message, selectedFile, status]);
+  }, [error?.message, isAuthenticated, selectedFile, status]);
 
   const clearResult = () => {
     if (resultUrl) {
@@ -91,6 +101,15 @@ export function BackgroundRemoverTool() {
   };
 
   const applyFile = (file: File) => {
+    if (!isAuthenticated) {
+      setError({
+        message: "请先登录",
+        details: "登录 Google 账号后才能上传并处理图片。",
+      });
+      setStatus("error");
+      return;
+    }
+
     const validationError = validateImage(file);
     if (validationError) {
       resetSelection();
@@ -125,6 +144,15 @@ export function BackgroundRemoverTool() {
   };
 
   const handleRemoveBackground = async () => {
+    if (!isAuthenticated) {
+      setError({
+        message: "请先登录",
+        details: "登录 Google 账号后才能开始抠图。",
+      });
+      setStatus("error");
+      return;
+    }
+
     if (!selectedFile) {
       setError({
         message: "还没有选择图片",
@@ -210,17 +238,27 @@ export function BackgroundRemoverTool() {
           </div>
         </div>
 
+        {!isAuthenticated ? (
+          <div className="rounded-[1.25rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            为了控制额度和使用权限，这个工具现在需要先完成 Google 登录。
+          </div>
+        ) : null}
+
         <label
           onDragOver={(event) => {
             event.preventDefault();
-            setIsDragging(true);
+            if (isAuthenticated) {
+              setIsDragging(true);
+            }
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          className={`flex min-h-64 cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed px-6 py-10 text-center transition ${
-            isDragging
-              ? "border-sky-400 bg-sky-50"
-              : "border-slate-300 bg-slate-50 hover:border-sky-300 hover:bg-sky-50/70"
+          className={`flex min-h-64 flex-col items-center justify-center rounded-[1.5rem] border border-dashed px-6 py-10 text-center transition ${
+            !isAuthenticated
+              ? "cursor-not-allowed border-slate-200 bg-slate-100 opacity-70"
+              : isDragging
+                ? "cursor-pointer border-sky-400 bg-sky-50"
+                : "cursor-pointer border-slate-300 bg-slate-50 hover:border-sky-300 hover:bg-sky-50/70"
           }`}
         >
           <input
@@ -229,6 +267,7 @@ export function BackgroundRemoverTool() {
             accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={handleFileChange}
+            disabled={!isAuthenticated}
           />
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-xl text-white shadow-lg shadow-slate-900/15">
             ✦
@@ -257,14 +296,15 @@ export function BackgroundRemoverTool() {
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            disabled={!isAuthenticated}
+            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             选择图片
           </button>
           <button
             type="button"
             onClick={handleRemoveBackground}
-            disabled={!selectedFile || status === "processing"}
+            disabled={!selectedFile || status === "processing" || !isAuthenticated}
             className="inline-flex items-center justify-center rounded-full bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-sky-300"
           >
             {status === "processing" ? "正在抠图..." : "开始抠图"}
