@@ -65,6 +65,28 @@ npm run cf:preview
 npm run cf:deploy
 ```
 
+## Cloudflare Workers Builds settings
+
+If you deploy from the Cloudflare dashboard with **Workers Builds**, do not use `npm run build` as the build command for this project.
+
+This app uses OpenNext, so the dashboard should run one of these setups:
+
+Option 1:
+
+```bash
+Build command: npm run cf:build
+Deploy command: npm run cf:deploy
+```
+
+Option 2:
+
+```bash
+Build command: <leave empty>
+Deploy command: npm run deploy
+```
+
+Using `npm run build` plus `npx wrangler deploy` will fail because `next build` does not generate the OpenNext deployment artifacts required by `opennextjs-cloudflare deploy`.
+
 Before deploying, make sure you have:
 
 - Wrangler authenticated
